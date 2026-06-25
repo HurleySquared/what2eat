@@ -69,9 +69,8 @@ export function Home() {
         {questions.map((_, i) => (
           <div
             key={i}
-            className={`h-1.5 w-6 rounded-full transition-colors ${
-              i < step ? 'bg-primary' : i === step ? 'bg-primary/40' : 'bg-muted'
-            }`}
+            className={`h-1.5 w-6 rounded-full transition-colors ${i < step ? 'bg-primary' : i === step ? 'bg-primary/40' : 'bg-muted'
+              }`}
           />
         ))}
       </div>
