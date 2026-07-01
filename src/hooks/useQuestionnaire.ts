@@ -1,155 +1,7 @@
 import { useState } from 'react';
 import type { Answers, Food, Phase, Question } from '@/types/quiz';
+import { BASE_QUESTIONS, FOODS, MEAT_FOLLOW_UP } from '@/constants/options';
 
-// ─── Data ────────────────────────────────────────────────────────────────────
-
-const MEAT_FOLLOW_UP: Question = {
-  id: 'meatType',
-  text: 'What kind of meat?',
-  options: [
-    { label: 'Beef',    emoji: '🐄', value: 'beef' },
-    { label: 'Chicken', emoji: '🍗', value: 'chicken' },
-    { label: 'Pork',    emoji: '🐷', value: 'pork' },
-    { label: 'Fish',    emoji: '🐟', value: 'fish' },
-    { label: 'Any',     emoji: '🥩', value: 'any' },
-  ],
-};
-
-const BASE_QUESTIONS: Question[] = [
-  {
-    id: 'size',
-    text: 'Full meal or small bites?',
-    options: [
-      { label: 'Full Meal',    emoji: '🍽️', value: 'full' },
-      { label: 'Small Bites', emoji: '🥢',  value: 'small' },
-    ],
-  },
-  {
-    id: 'time',
-    text: 'What kind of meal?',
-    options: [
-      { label: 'Breakfast', emoji: '🌅', value: 'breakfast' },
-      { label: 'Brunch',    emoji: '🥂', value: 'brunch' },
-      { label: 'Lunch',     emoji: '☀️', value: 'lunch' },
-      { label: 'Dinner',    emoji: '🌙', value: 'dinner' },
-      { label: 'Dessert',   emoji: '🍰', value: 'dessert' },
-    ],
-  },
-  {
-    id: 'diet',
-    text: 'Any dietary preference?',
-    options: [
-      { label: 'Meat',         emoji: '🥩', value: 'meat' },
-      { label: 'Vegetarian',   emoji: '🥦', value: 'vegetarian' },
-      { label: 'Pescatarian',  emoji: '🐟', value: 'pescatarian' },
-    ],
-  },
-  {
-    id: 'flavor',
-    text: 'Sweet or savory?',
-    options: [
-      { label: 'Sweet',  emoji: '🍯', value: 'sweet' },
-      { label: 'Savory', emoji: '🧂', value: 'savory' },
-    ],
-  },
-  {
-    id: 'temp',
-    text: 'Warm or cold?',
-    options: [
-      { label: 'Warm', emoji: '♨️', value: 'warm' },
-      { label: 'Cold', emoji: '❄️', value: 'cold' },
-    ],
-  },
-  {
-    id: 'weight',
-    text: 'Heavy or light?',
-    options: [
-      { label: 'Heavy', emoji: '🏋️', value: 'heavy' },
-      { label: 'Light', emoji: '🪶',  value: 'light' },
-    ],
-  },
-];
-
-const FOODS: Food[] = [
-  // ── Breakfast / Brunch ───────────────────────────────────────────────────────
-  { name: 'Eggs & Bacon',        emoji: '🍳', size: 'full',  time: ['breakfast'],                    diet: ['meat'],                            meatType: ['pork','any'],                  flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Waffles',             emoji: '🧇', size: 'full',  time: ['breakfast','brunch'],           diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'warm', weight: 'heavy' },
-  { name: 'Pancakes',            emoji: '🥞', size: 'full',  time: ['breakfast','brunch'],           diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'warm', weight: 'heavy' },
-  { name: 'Avocado Toast',       emoji: '🥑', size: 'full',  time: ['breakfast','brunch'],           diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'savory', temp: 'warm', weight: 'light' },
-  { name: 'Shakshuka',           emoji: '🍳', size: 'full',  time: ['breakfast','brunch'],           diet: ['vegetarian','pescatarian','meat'],                                             flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Oatmeal',             emoji: '🥣', size: 'full',  time: ['breakfast'],                    diet: ['vegetarian','pescatarian','meat'],                                             flavor: 'sweet',  temp: 'warm', weight: 'light' },
-  { name: 'Acai Bowl',           emoji: '🫐', size: 'full',  time: ['breakfast','brunch'],           diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'cold', weight: 'light' },
-  { name: 'Smoothie Bowl',       emoji: '🍓', size: 'full',  time: ['breakfast','brunch'],           diet: ['vegetarian','pescatarian','meat'],                                             flavor: 'sweet',  temp: 'cold', weight: 'light' },
-  { name: 'Eggs Benedict',       emoji: '🍳', size: 'full',  time: ['brunch'],                       diet: ['meat','pescatarian'],              meatType: ['pork','any'],                  flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'French Toast',        emoji: '🍞', size: 'full',  time: ['breakfast','brunch'],           diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'warm', weight: 'heavy' },
-  { name: 'Breakfast Burrito',   emoji: '🌯', size: 'full',  time: ['breakfast','brunch'],           diet: ['meat','vegetarian'],               meatType: ['beef','chicken','pork','any'], flavor: 'savory', temp: 'warm', weight: 'heavy' },
-
-  // ── Lunch ────────────────────────────────────────────────────────────────────
-  { name: 'Caesar Salad',        emoji: '🥗', size: 'full',  time: ['lunch','dinner'],               diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'savory', temp: 'cold', weight: 'light' },
-  { name: 'Greek Salad',         emoji: '🥗', size: 'full',  time: ['lunch','dinner'],               diet: ['vegetarian','pescatarian','meat'],                                             flavor: 'savory', temp: 'cold', weight: 'light' },
-  { name: 'Tomato Soup',         emoji: '🍅', size: 'full',  time: ['lunch','dinner'],               diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'savory', temp: 'warm', weight: 'light' },
-  { name: 'Burrito',             emoji: '🌯', size: 'full',  time: ['lunch','dinner'],               diet: ['meat','vegetarian','pescatarian'], meatType: ['beef','chicken','any'],        flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Banh Mi',             emoji: '🥖', size: 'full',  time: ['lunch'],                        diet: ['meat','pescatarian'],              meatType: ['pork','chicken','any'],        flavor: 'savory', temp: 'warm', weight: 'light' },
-  { name: 'Falafel Wrap',        emoji: '🫓', size: 'full',  time: ['lunch','dinner'],               diet: ['vegetarian','pescatarian','meat'],                                             flavor: 'savory', temp: 'warm', weight: 'light' },
-
-  // ── Lunch & Dinner ───────────────────────────────────────────────────────────
-  { name: 'Sushi',               emoji: '🍱', size: 'full',  time: ['lunch','dinner'],               diet: ['pescatarian','meat'],              meatType: ['fish','any'],                  flavor: 'savory', temp: 'cold', weight: 'light' },
-  { name: 'Poke Bowl',           emoji: '🍚', size: 'full',  time: ['lunch','dinner'],               diet: ['pescatarian','meat'],              meatType: ['fish','any'],                  flavor: 'savory', temp: 'cold', weight: 'light' },
-  { name: 'Pad Thai',            emoji: '🍜', size: 'full',  time: ['lunch','dinner'],               diet: ['meat','vegetarian','pescatarian'], meatType: ['chicken','any'],               flavor: 'savory', temp: 'warm', weight: 'light' },
-  { name: 'Veggie Stir Fry',     emoji: '🥦', size: 'full',  time: ['lunch','dinner'],               diet: ['vegetarian','pescatarian','meat'],                                             flavor: 'savory', temp: 'warm', weight: 'light' },
-  { name: 'Ramen',               emoji: '🍜', size: 'full',  time: ['lunch','dinner'],               diet: ['meat','vegetarian','pescatarian'], meatType: ['pork','chicken','any'],        flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Pho',                 emoji: '🍲', size: 'full',  time: ['lunch','dinner'],               diet: ['meat','pescatarian'],              meatType: ['beef','chicken','any'],        flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Pizza',               emoji: '🍕', size: 'full',  time: ['lunch','dinner'],               diet: ['meat','vegetarian'],               meatType: ['beef','pork','any'],           flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Burger',              emoji: '🍔', size: 'full',  time: ['lunch','dinner'],               diet: ['meat','vegetarian'],               meatType: ['beef','any'],                  flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Chicken Stir Fry',    emoji: '🍳', size: 'full',  time: ['lunch','dinner'],               diet: ['meat'],                            meatType: ['chicken','any'],               flavor: 'savory', temp: 'warm', weight: 'light' },
-  { name: 'Fish & Chips',        emoji: '🐟', size: 'full',  time: ['lunch','dinner'],               diet: ['pescatarian','meat'],              meatType: ['fish','any'],                  flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Clam Chowder',        emoji: '🍲', size: 'full',  time: ['lunch','dinner'],               diet: ['pescatarian','meat'],              meatType: ['fish','any'],                  flavor: 'savory', temp: 'warm', weight: 'heavy' },
-
-  // ── Dinner ───────────────────────────────────────────────────────────────────
-  { name: 'Steak',               emoji: '🥩', size: 'full',  time: ['dinner'],                       diet: ['meat'],                            meatType: ['beef','any'],                  flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Grilled Chicken',     emoji: '🍗', size: 'full',  time: ['dinner','lunch'],               diet: ['meat'],                            meatType: ['chicken','any'],               flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'BBQ Ribs',            emoji: '🍖', size: 'full',  time: ['dinner'],                       diet: ['meat'],                            meatType: ['pork','beef','any'],           flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Grilled Salmon',      emoji: '🐟', size: 'full',  time: ['dinner','lunch'],               diet: ['pescatarian','meat'],              meatType: ['fish','any'],                  flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Pasta Carbonara',     emoji: '🍝', size: 'full',  time: ['dinner'],                       diet: ['meat'],                            meatType: ['pork','any'],                  flavor: 'savory', temp: 'warm', weight: 'heavy' },
-
-  // ── Dessert ──────────────────────────────────────────────────────────────────
-  { name: 'Chocolate Lava Cake', emoji: '🍫', size: 'full',  time: ['dessert'],                      diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'warm', weight: 'heavy' },
-  { name: 'Crème Brûlée',        emoji: '🍮', size: 'full',  time: ['dessert'],                      diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'cold', weight: 'light' },
-  { name: 'Cheesecake',          emoji: '🍰', size: 'full',  time: ['dessert'],                      diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'cold', weight: 'heavy' },
-  { name: 'Tiramisu',            emoji: '🍮', size: 'full',  time: ['dessert'],                      diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'cold', weight: 'heavy' },
-
-  // ── Small Bites — Breakfast / Brunch ─────────────────────────────────────────
-  { name: 'Yogurt Parfait',      emoji: '🍓', size: 'small', time: ['breakfast','brunch'],           diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'cold', weight: 'light' },
-  { name: 'Fruit Salad',         emoji: '🍉', size: 'small', time: ['breakfast','brunch'],           diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'cold', weight: 'light' },
-  { name: 'Donuts',              emoji: '🍩', size: 'small', time: ['breakfast','brunch','dessert'], diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'warm', weight: 'light' },
-  { name: 'Croissant',           emoji: '🥐', size: 'small', time: ['breakfast','brunch'],           diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'savory', temp: 'warm', weight: 'light' },
-
-  // ── Small Bites — Lunch / Dinner ─────────────────────────────────────────────
-  { name: 'Tacos',               emoji: '🌮', size: 'small', time: ['lunch','dinner'],               diet: ['meat','vegetarian','pescatarian'], meatType: ['beef','chicken','pork','any'], flavor: 'savory', temp: 'warm', weight: 'light' },
-  { name: 'Fish Tacos',          emoji: '🌮', size: 'small', time: ['lunch','dinner'],               diet: ['pescatarian','meat'],              meatType: ['fish','any'],                  flavor: 'savory', temp: 'warm', weight: 'light' },
-  { name: 'Sliders',             emoji: '🍔', size: 'small', time: ['lunch','dinner'],               diet: ['meat'],                            meatType: ['beef','chicken','any'],        flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Quesadilla',          emoji: '🫔', size: 'small', time: ['lunch','dinner'],               diet: ['meat','vegetarian'],               meatType: ['beef','chicken','pork','any'], flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Chicken Wings',       emoji: '🍗', size: 'small', time: ['lunch','dinner'],               diet: ['meat'],                            meatType: ['chicken','any'],               flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Gyoza',               emoji: '🥟', size: 'small', time: ['lunch','dinner'],               diet: ['meat','vegetarian'],               meatType: ['pork','chicken','any'],        flavor: 'savory', temp: 'warm', weight: 'light' },
-  { name: 'Pork Dumplings',      emoji: '🥟', size: 'small', time: ['lunch','dinner'],               diet: ['meat'],                            meatType: ['pork','any'],                  flavor: 'savory', temp: 'warm', weight: 'light' },
-  { name: 'Veggie Dumplings',    emoji: '🥟', size: 'small', time: ['lunch','dinner'],               diet: ['vegetarian','pescatarian','meat'],                                             flavor: 'savory', temp: 'warm', weight: 'light' },
-  { name: 'Nachos',              emoji: '🌽', size: 'small', time: ['lunch','dinner'],               diet: ['meat','vegetarian'],               meatType: ['beef','chicken','any'],        flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Loaded Fries',        emoji: '🍟', size: 'small', time: ['lunch','dinner'],               diet: ['meat','vegetarian'],               meatType: ['beef','any'],                  flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Mozzarella Sticks',   emoji: '🧀', size: 'small', time: ['lunch','dinner'],               diet: ['vegetarian','meat','pescatarian'],                                             flavor: 'savory', temp: 'warm', weight: 'heavy' },
-  { name: 'Edamame',             emoji: '🫛', size: 'small', time: ['lunch','dinner'],               diet: ['vegetarian','pescatarian','meat'],                                             flavor: 'savory', temp: 'warm', weight: 'light' },
-  { name: 'Shrimp Cocktail',     emoji: '🦐', size: 'small', time: ['dinner','lunch'],               diet: ['pescatarian','meat'],              meatType: ['fish','any'],                  flavor: 'savory', temp: 'cold', weight: 'light' },
-  { name: 'Ceviche',             emoji: '🍋', size: 'small', time: ['lunch','dinner'],               diet: ['pescatarian','meat'],              meatType: ['fish','any'],                  flavor: 'savory', temp: 'cold', weight: 'light' },
-  { name: 'Caprese',             emoji: '🍅', size: 'small', time: ['lunch','brunch','dinner'],      diet: ['vegetarian','pescatarian','meat'],                                             flavor: 'savory', temp: 'cold', weight: 'light' },
-  { name: 'Hummus & Pita',       emoji: '🫓', size: 'small', time: ['lunch','brunch','dinner'],      diet: ['vegetarian','pescatarian','meat'],                                             flavor: 'savory', temp: 'cold', weight: 'light' },
-  { name: 'Charcuterie Board',   emoji: '🧀', size: 'small', time: ['brunch','lunch','dinner'],      diet: ['meat','pescatarian'],              meatType: ['pork','beef','any'],           flavor: 'savory', temp: 'cold', weight: 'light' },
-
-  // ── Small Bites — Dessert ────────────────────────────────────────────────────
-  { name: 'Ice Cream',           emoji: '🍦', size: 'small', time: ['dessert'],                      diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'cold', weight: 'light' },
-  { name: 'Warm Brownie',        emoji: '🍫', size: 'small', time: ['dessert'],                      diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'warm', weight: 'heavy' },
-  { name: 'Churros',             emoji: '🍩', size: 'small', time: ['dessert','brunch'],             diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'warm', weight: 'light' },
-  { name: 'Macarons',            emoji: '🍬', size: 'small', time: ['dessert'],                      diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'cold', weight: 'light' },
-  { name: 'Banana Split',        emoji: '🍌', size: 'small', time: ['dessert'],                      diet: ['meat','vegetarian','pescatarian'],                                             flavor: 'sweet',  temp: 'cold', weight: 'heavy' },
-];
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
 
@@ -162,20 +14,38 @@ function buildQuestions(answers: Answers): Question[] {
   return questions;
 }
 
+// Weighted so "hard" constraints (what meal, what diet, full vs. small) dominate
+// the "soft" preferences (warm/cold, heavy/light). This keeps a vegetarian from
+// ever being handed a steak and a dessert pick from returning a savory lunch.
+const WEIGHTS = {
+  diet: 5,
+  size: 4,
+  time: 4,
+  meatType: 3,
+  flavor: 3,
+  temp: 2,
+  weight: 2,
+} as const;
+
+function scoreFood(food: Food, answers: Answers): number {
+  let score = 0;
+  if (answers.size && food.size === answers.size)                    score += WEIGHTS.size;
+  if (answers.time && food.time.includes(answers.time))             score += WEIGHTS.time;
+  if (answers.diet && food.diet.includes(answers.diet))            score += WEIGHTS.diet;
+  if (answers.meatType && food.meatType?.includes(answers.meatType)) score += WEIGHTS.meatType;
+  if (answers.flavor && food.flavor === answers.flavor)             score += WEIGHTS.flavor;
+  if (answers.temp && food.temp === answers.temp)                    score += WEIGHTS.temp;
+  if (answers.weight && food.weight === answers.weight)             score += WEIGHTS.weight;
+  return score;
+}
+
 function recommend(answers: Answers): Food {
-  const scored = FOODS.map(food => {
-    let score = 0;
-    if (answers.size     && food.size === answers.size)              score++;
-    if (answers.time     && food.time.includes(answers.time))        score++;
-    if (answers.diet     && food.diet.includes(answers.diet))        score++;
-    if (answers.meatType && food.meatType?.includes(answers.meatType)) score++;
-    if (answers.flavor   && food.flavor === answers.flavor)          score++;
-    if (answers.temp     && food.temp === answers.temp)              score++;
-    if (answers.weight   && food.weight === answers.weight)          score++;
-    return { food, score };
-  });
-  scored.sort((a, b) => b.score - a.score);
-  return scored[0].food;
+  const scored = FOODS.map(food => ({ food, score: scoreFood(food, answers) }));
+  const best = Math.max(...scored.map(s => s.score));
+  // Pick randomly among the equally-best matches so the same answers can still
+  // surface variety — fitting for a spin-the-wheel app.
+  const winners = scored.filter(s => s.score === best);
+  return winners[Math.floor(Math.random() * winners.length)].food;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
