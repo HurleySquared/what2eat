@@ -21,10 +21,15 @@ export function Profile() {
   const isCreate = mode === 'create';
 
   return (
-    <main className="mx-auto max-w-md px-4 py-16">
-      <Card>
-        <CardHeader>
-          <CardTitle>{isCreate ? 'Create New User' : 'Your Profile'}</CardTitle>
+    <main className="mx-auto max-w-md px-5 py-14">
+      <Card className="shadow-lg border-0 rounded-3xl overflow-hidden">
+        {/* Top accent bar */}
+        <div className="h-2 bg-primary" />
+
+        <CardHeader className="pt-7 pb-2">
+          <CardTitle className="text-2xl font-black">
+            {isCreate ? 'Create Account' : 'Your Profile'}
+          </CardTitle>
           <CardDescription>
             {isCreate
               ? 'Fill in the details for the new account.'
@@ -32,10 +37,10 @@ export function Profile() {
           </CardDescription>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="pt-4">
           <form id="profile-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="nickname">Nickname</Label>
+              <Label htmlFor="nickname" className="font-semibold">Nickname</Label>
               <Input
                 id="nickname"
                 name="nickname"
@@ -44,11 +49,12 @@ export function Profile() {
                 onChange={handleChange}
                 placeholder="What should we call you?"
                 required
+                className="h-11 rounded-xl"
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="font-semibold">Email</Label>
               <Input
                 id="email"
                 name="email"
@@ -57,11 +63,12 @@ export function Profile() {
                 onChange={handleChange}
                 placeholder="you@example.com"
                 required
+                className="h-11 rounded-xl"
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="font-semibold">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -70,13 +77,13 @@ export function Profile() {
                   value={form.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="pr-10"
+                  className="h-11 rounded-xl pr-10"
                   required
                 />
                 <button
                   type="button"
                   onClick={togglePassword}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -86,18 +93,27 @@ export function Profile() {
           </form>
         </CardContent>
 
-        <CardFooter className="flex flex-col gap-3">
+        <CardFooter className="flex flex-col gap-3 pb-7">
           <div className="flex w-full items-center gap-3">
-            <Button type="submit" form="profile-form" className="flex-1">
-              {isCreate ? 'Create user' : 'Save changes'}
+            <Button
+              type="submit"
+              form="profile-form"
+              className="flex-1 h-11 rounded-xl font-bold"
+            >
+              {isCreate ? 'Create account' : 'Save changes'}
             </Button>
             {isCreate && (
-              <Button type="button" variant="outline" onClick={cancelCreate}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={cancelCreate}
+                className="h-11 rounded-xl"
+              >
                 Cancel
               </Button>
             )}
             {saved && !isCreate && (
-              <span className="text-sm text-muted-foreground">Saved!</span>
+              <span className="text-sm font-medium text-primary">Saved ✓</span>
             )}
           </div>
 
@@ -105,7 +121,7 @@ export function Profile() {
             <Button
               type="button"
               variant="ghost"
-              className="w-full text-muted-foreground"
+              className="w-full text-muted-foreground hover:text-foreground"
               onClick={startCreate}
             >
               <UserPlus className="mr-2 size-4" />
