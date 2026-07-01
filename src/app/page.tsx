@@ -1,15 +1,51 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { SpinningWheel } from '@/components/SpinningWheel';
 import { useQuestionnaire } from '@/hooks/useQuestionnaire';
+import { savePick } from '@/lib/actions';
 
-export function Home() {
-  const { phase, step, questions, question, result, start, pick, skip, back } = useQuestionnaire();
+type SaveState = 'idle' | 'saving' | 'saved' | 'signedOut' | 'error';
+
+export default function HomePage() {
+  const { phase, step, questions, question, answers, result, start, pick, skip, back } =
+    useQuestionnaire();
+  const { status } = useSession();
+  const [saveState, setSaveState] = useState<SaveState>('idle');
+  const savedFor = useRef<string | null>(null);
+
+  // Persist the pick to the signed-in user's history exactly once per result.
+  useEffect(() => {
+    if (phase !== 'result' || !result) return;
+    if (status === 'loading') return;
+    if (savedFor.current === result.name) return;
+    savedFor.current = result.name;
+
+    if (status !== 'authenticated') {
+      setSaveState('signedOut');
+      return;
+    }
+
+    setSaveState('saving');
+    savePick(result.name, answers)
+      .then((res) => setSaveState(res.success ? 'saved' : 'error'))
+      .catch(() => setSaveState('error'));
+  }, [phase, result, status, answers]);
+
+  const restart = () => {
+    savedFor.current = null;
+    setSaveState('idle');
+    start();
+  };
 
   if (phase === 'idle') {
     return (
       <div className="flex flex-col min-h-[calc(100vh-4rem)]">
         {/* Dark hero — Uber Eats inspired */}
-        <section className="bg-[#141414] text-white px-5 py-20 text-center flex flex-col items-center gap-6">
+        <section className="bg-[#141414] text-white px-5 py-10 text-center flex flex-col items-center gap-6">
           <h1 className="text-5xl font-black tracking-tight leading-tight max-w-sm">
             Can't decide<br />what to eat?
           </h1>
@@ -63,6 +99,21 @@ export function Home() {
           </div>
         </div>
 
+        {/* Save-to-history status */}
+        <p className="text-sm font-medium text-muted-foreground -mt-2 h-5">
+          {saveState === 'saving' && 'Saving to your history…'}
+          {saveState === 'saved' && '✓ Saved to your history'}
+          {saveState === 'error' && 'Could not save this pick.'}
+          {saveState === 'signedOut' && (
+            <>
+              <Link href="/login" className="font-semibold text-primary hover:underline">
+                Sign in
+              </Link>{' '}
+              to save your picks
+            </>
+          )}
+        </p>
+
         {/* Delivery links */}
         <div className="flex w-full max-w-sm flex-col gap-3">
           <Button
@@ -93,7 +144,7 @@ export function Home() {
 
         <Button
           variant="outline"
-          onClick={start}
+          onClick={restart}
           className="rounded-full px-8 font-semibold"
         >
           Start over
