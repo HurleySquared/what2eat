@@ -59,6 +59,8 @@ interface UseQuestionnaireReturn {
   result: Food | null;
   start: () => void;
   pick: (value: string) => void;
+  skip: () => void;
+  back: () => void;
 }
 
 export function useQuestionnaire(): UseQuestionnaireReturn {
@@ -90,5 +92,12 @@ export function useQuestionnaire(): UseQuestionnaireReturn {
     }
   };
 
-  return { phase, step, questions, question, answers, result, start, pick };
+  // Skip = express "no preference" for this question and move on.
+  const skip = () => pick('any');
+
+  const back = () => {
+    if (step > 0) setStep(step - 1);
+  };
+
+  return { phase, step, questions, question, answers, result, start, pick, skip, back };
 }

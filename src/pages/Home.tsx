@@ -3,14 +3,13 @@ import { SpinningWheel } from '@/components/SpinningWheel';
 import { useQuestionnaire } from '@/hooks/useQuestionnaire';
 
 export function Home() {
-  const { phase, step, questions, question, result, start, pick } = useQuestionnaire();
+  const { phase, step, questions, question, result, start, pick, skip, back } = useQuestionnaire();
 
   if (phase === 'idle') {
     return (
       <div className="flex flex-col min-h-[calc(100vh-4rem)]">
         {/* Dark hero — Uber Eats inspired */}
         <section className="bg-[#141414] text-white px-5 py-20 text-center flex flex-col items-center gap-6">
-          <div className="text-7xl mb-2">🍔</div>
           <h1 className="text-5xl font-black tracking-tight leading-tight max-w-sm">
             Can't decide<br />what to eat?
           </h1>
@@ -59,7 +58,6 @@ export function Home() {
             <p className="text-white/80 text-xs font-bold uppercase tracking-widest">Your pick</p>
           </div>
           <div className="px-6 py-10 text-center flex flex-col items-center gap-4">
-            <div className="text-8xl">{result.emoji}</div>
             <h2 className="text-4xl font-black tracking-tight">{result.name}</h2>
             <p className="text-muted-foreground">Order it now 👇</p>
           </div>
@@ -119,6 +117,9 @@ export function Home() {
         key={question.id}
         options={question.options}
         onSelect={pick}
+        onSkip={skip}
+        onPrevious={back}
+        canPrevious={step > 0}
       />
 
       {/* Progress dots */}

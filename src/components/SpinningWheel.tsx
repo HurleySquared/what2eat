@@ -1,17 +1,28 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Option } from '@/types/quiz';
 
-const SEGMENT_COLORS = [
-  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
-  '#FFEAA7', '#DDA0DD', '#F7AE7E', '#A8E6CF',
-  '#B5EAD7', '#FF9AA2',
-];
+// Kept in sync with the CSS transition duration below.
+const SPIN_MS = 3400;
 
-const SIZE = 320;
+// Roulette palette: alternating red / black pockets, green for the "Any" pocket.
+const ROULETTE_RED = '#B01E28';
+const ROULETTE_BLACK = '#171717';
+const ROULETTE_GREEN = '#0B6E4F';
+const GOLD = '#D4AF37';
+const GOLD_DARK = '#A8842B';
+
+function pocketColor(opt: Option, index: number): string {
+  if (opt.value === 'any') return ROULETTE_GREEN;
+  return index % 2 === 0 ? ROULETTE_RED : ROULETTE_BLACK;
+}
+
+const SIZE = 340;
 const CX = SIZE / 2;
 const CY = SIZE / 2;
-const R = SIZE / 2 - 10;
+const R = SIZE / 2 - 12;      // outer pocket radius
+const R_INNER = 46;           // where the labels start (edge of the hub)
 
 function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
   const rad = (angleDeg - 90) * (Math.PI / 180);
@@ -28,30 +39,39 @@ function segmentPath(cx: number, cy: number, r: number, startAngle: number, endA
 interface Props {
   options: Option[];
   onSelect: (value: string) => void;
+  onSkip: () => void;
+  onPrevious: () => void;
+  canPrevious: boolean;
 }
 
-export function SpinningWheel({ options, onSelect }: Props) {
+export function SpinningWheel({ options, onSelect, onSkip, onPrevious, canPrevious }: Props) {
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
-  const pendingValue = useRef<string | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const segmentAngle = 360 / options.length;
+  const fontSize = options.length <= 4 ? 14 : options.length <= 6 ? 12 : 10;
+
+  // Clear any pending selection if the wheel unmounts mid-spin (e.g. the
+  // question advances or the user navigates away).
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+  }, []);
 
   const spinTo = (index: number) => {
     if (spinning) return;
     const targetNorm = ((360 - (index * segmentAngle + segmentAngle / 2)) % 360 + 360) % 360;
     const currentNorm = ((rotation % 360) + 360) % 360;
     const diff = (targetNorm - currentNorm + 360) % 360;
-    pendingValue.current = options[index].value;
+    const value = options[index].value;
+    // Extra full turns for a satisfying roulette spin.
     setRotation(rotation + 1440 + diff);
     setSpinning(true);
-  };
-
-  const handleTransitionEnd = () => {
-    setSpinning(false);
-    if (pendingValue.current) {
-      onSelect(pendingValue.current);
-      pendingValue.current = null;
-    }
+    // Advance once the spin finishes. A timer (rather than onTransitionEnd) keeps
+    // this reliable even if the transition event is dropped or interrupted.
+    timer.current = setTimeout(() => {
+      setSpinning(false);
+      onSelect(value);
+    }, SPIN_MS);
   };
 
   const pickRandom = () => {
@@ -62,17 +82,17 @@ export function SpinningWheel({ options, onSelect }: Props) {
   return (
     <div className="flex flex-col items-center gap-6">
       <div className="relative">
-        {/* Pointer at top */}
+        {/* Pointer / ball marker at the top */}
         <div
           className="absolute left-1/2 -translate-x-1/2 z-10"
           style={{
-            top: -14,
+            top: -10,
             width: 0,
             height: 0,
-            borderLeft: '11px solid transparent',
-            borderRight: '11px solid transparent',
-            borderTop: '22px solid hsl(var(--primary))',
-            filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.25))',
+            borderLeft: '13px solid transparent',
+            borderRight: '13px solid transparent',
+            borderTop: `24px solid ${GOLD}`,
+            filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.4))',
           }}
         />
 
@@ -80,10 +100,9 @@ export function SpinningWheel({ options, onSelect }: Props) {
         <div
           style={{
             transform: `rotate(${rotation}deg)`,
-            transition: spinning ? 'transform 1.8s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none',
+            transition: spinning ? `transform ${SPIN_MS}ms cubic-bezier(0.15, 0.6, 0.06, 1)` : 'none',
             willChange: 'transform',
           }}
-          onTransitionEnd={handleTransitionEnd}
         >
           <svg
             width={SIZE}
@@ -91,67 +110,99 @@ export function SpinningWheel({ options, onSelect }: Props) {
             viewBox={`0 0 ${SIZE} ${SIZE}`}
             style={{ cursor: spinning ? 'default' : 'pointer', display: 'block' }}
           >
+            <defs>
+              <radialGradient id="hubGrad" cx="50%" cy="42%" r="60%">
+                <stop offset="0%" stopColor="#FBE9A0" />
+                <stop offset="55%" stopColor={GOLD} />
+                <stop offset="100%" stopColor={GOLD_DARK} />
+              </radialGradient>
+              <radialGradient id="wheelShade" cx="50%" cy="50%" r="50%">
+                <stop offset="70%" stopColor="rgba(0,0,0,0)" />
+                <stop offset="100%" stopColor="rgba(0,0,0,0.35)" />
+              </radialGradient>
+            </defs>
+
+            {/* Wooden / brass outer rim */}
+            <circle cx={CX} cy={CY} r={R + 9} fill={GOLD_DARK} />
+            <circle cx={CX} cy={CY} r={R + 5} fill={GOLD} />
+
+            {/* Pockets */}
             {options.map((opt, i) => {
               const startAngle = i * segmentAngle;
               const endAngle = startAngle + segmentAngle;
               const mid = startAngle + segmentAngle / 2;
-              const pos = polarToCartesian(CX, CY, R * 0.63, mid);
-              // Flip text for bottom-half segments so nothing is upside-down
-              const textRot = mid > 90 && mid < 270 ? mid + 180 : mid;
-              const emojiSize = segmentAngle >= 120 ? 28 : segmentAngle >= 72 ? 22 : 16;
-              const labelSize = segmentAngle >= 120 ? 11 : segmentAngle >= 72 ? 9 : 7;
+
+              // Radial label centered in the middle of the pocket band, flipped
+              // on the left half so it never appears upside-down.
+              const rMid = (R_INNER + R) / 2;
+              const rot = mid < 180 ? mid - 90 : mid + 90;
+              const labelPos = polarToCartesian(CX, CY, rMid, mid);
 
               return (
                 <g key={opt.value} onClick={() => spinTo(i)}>
                   <path
                     d={segmentPath(CX, CY, R, startAngle, endAngle)}
-                    fill={SEGMENT_COLORS[i % SEGMENT_COLORS.length]}
-                    stroke="white"
+                    fill={pocketColor(opt, i)}
+                    stroke={GOLD}
                     strokeWidth={2}
                   />
-                  <g transform={`translate(${pos.x},${pos.y}) rotate(${textRot})`}>
-                    <text
-                      y={-emojiSize * 0.4}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fontSize={emojiSize}
-                      style={{ userSelect: 'none', pointerEvents: 'none' }}
-                    >
-                      {opt.emoji}
-                    </text>
-                    <text
-                      y={emojiSize * 0.85}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fontSize={labelSize}
-                      fontWeight="700"
-                      fill="rgba(0,0,0,0.72)"
-                      style={{ userSelect: 'none', pointerEvents: 'none' }}
-                    >
-                      {opt.label}
-                    </text>
-                  </g>
+                  <text
+                    x={labelPos.x}
+                    y={labelPos.y}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    transform={`rotate(${rot} ${labelPos.x} ${labelPos.y})`}
+                    fontSize={fontSize}
+                    fontWeight={700}
+                    fill="#F7F3E8"
+                    style={{ userSelect: 'none', pointerEvents: 'none', letterSpacing: '0.02em' }}
+                  >
+                    {opt.label}
+                  </text>
                 </g>
               );
             })}
 
-            {/* Outer ring */}
-            <circle cx={CX} cy={CY} r={R} fill="none" stroke="white" strokeWidth={3} />
-            {/* Center cap */}
-            <circle cx={CX} cy={CY} r={22} fill="white" stroke="#e2e8f0" strokeWidth={3} />
-            <circle cx={CX} cy={CY} r={7} fill="hsl(var(--primary))" />
+            {/* Inner shading for depth */}
+            <circle cx={CX} cy={CY} r={R} fill="url(#wheelShade)" pointerEvents="none" />
+
+            {/* Metallic center hub */}
+            <circle cx={CX} cy={CY} r={R_INNER - 6} fill={GOLD_DARK} />
+            <circle cx={CX} cy={CY} r={R_INNER - 9} fill="url(#hubGrad)" />
+            <circle cx={CX} cy={CY} r={9} fill="#3a2f12" />
+            <circle cx={CX} cy={CY} r={4} fill={GOLD} />
           </svg>
         </div>
       </div>
 
-      <Button
-        variant="outline"
-        onClick={pickRandom}
-        disabled={spinning}
-        className="gap-2"
-      >
-        🎲 Random Pick
-      </Button>
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          onClick={onPrevious}
+          disabled={!canPrevious || spinning}
+          className="gap-1"
+        >
+          <ChevronLeft className="size-4" />
+          Previous
+        </Button>
+        <Button
+          variant="outline"
+          onClick={onSkip}
+          disabled={spinning}
+          className="gap-1.5"
+        >
+          <SkipForward className="size-4" />
+          Skip
+        </Button>
+        <Button
+          variant="outline"
+          onClick={pickRandom}
+          disabled={spinning}
+          className="gap-2"
+        >
+          🎲 Random
+        </Button>
+      </div>
     </div>
   );
 }

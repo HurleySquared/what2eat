@@ -7,6 +7,7 @@ export const BASE_QUESTIONS: Question[] = [
     options: [
       { label: 'Full Meal',    emoji: '🍽️', value: 'full' },
       { label: 'Small Bites', emoji: '🥢',  value: 'small' },
+      { label: 'Any',          emoji: '🤷', value: 'any' },
     ],
   },
   {
@@ -15,6 +16,7 @@ export const BASE_QUESTIONS: Question[] = [
     options: [
       { label: 'Heavy', emoji: '🏋️', value: 'heavy' },
       { label: 'Light', emoji: '🪶',  value: 'light' },
+      { label: 'Any',   emoji: '🤷', value: 'any' },
     ],
   },
   {
@@ -23,6 +25,7 @@ export const BASE_QUESTIONS: Question[] = [
     options: [
       { label: 'Warm', emoji: '♨️', value: 'warm' },
       { label: 'Cold', emoji: '❄️', value: 'cold' },
+      { label: 'Any',  emoji: '🤷', value: 'any' },
     ],
   },
   {
@@ -31,6 +34,7 @@ export const BASE_QUESTIONS: Question[] = [
     options: [
       { label: 'Sweet',  emoji: '🍯', value: 'sweet' },
       { label: 'Savory', emoji: '🧂', value: 'savory' },
+      { label: 'Any',    emoji: '🤷', value: 'any' },
     ],
   },
   {
@@ -42,6 +46,7 @@ export const BASE_QUESTIONS: Question[] = [
       { label: 'Lunch',     emoji: '☀️', value: 'lunch' },
       { label: 'Dinner',    emoji: '🌙', value: 'dinner' },
       { label: 'Dessert',   emoji: '🍰', value: 'dessert' },
+      { label: 'Any',       emoji: '🤷', value: 'any' },
     ],
   },
   {
@@ -51,6 +56,7 @@ export const BASE_QUESTIONS: Question[] = [
       { label: 'Meat',         emoji: '🥩', value: 'meat' },
       { label: 'Vegetarian',   emoji: '🥦', value: 'vegetarian' },
       { label: 'Pescatarian',  emoji: '🐟', value: 'pescatarian' },
+      { label: 'Any',          emoji: '🤷', value: 'any' },
     ],
   },
 ];
